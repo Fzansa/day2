@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const validator = require('email-validator');
+const bcrypt = require('bcrypt');
 const app = express()
 const port = 3000
 
@@ -24,7 +25,7 @@ const userSchema = mongoose.Schema({
         required: true,
         type: String,
         unique: true,
-        validate:function(){
+        validate: function () {
             return validator.validate(this.email);
         }
     },
@@ -44,6 +45,11 @@ const userSchema = mongoose.Schema({
 userSchema.pre('save', function () {
     this.confirmPassword = undefined;
 });
+userSchema.pre('save', async function () {
+    let salt = await bcrypt.genSalt();
+    let hashedPassword = await bcrypt.hash(this.password, salt);
+    this.password = hashedPassword;
+})
 
 userSchema.post('save', function (doc) {
     console.log('baad ka hai ye', doc);
